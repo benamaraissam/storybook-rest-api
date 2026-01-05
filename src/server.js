@@ -272,6 +272,14 @@ function startStorybookProcess(config) {
         // Find the project with storybook target
         for (const [projectName, project] of Object.entries(angularJson.projects || {})) {
           if (project.architect?.storybook) {
+            // Ensure compodoc is disabled to avoid -e option conflicts
+            if (!angularJson.projects[projectName].architect.storybook.options) {
+              angularJson.projects[projectName].architect.storybook.options = {};
+            }
+            angularJson.projects[projectName].architect.storybook.options.compodoc = false;
+            angularJson.projects[projectName].architect.storybook.options.port = storybookPort;
+            fs.writeFileSync(angularJsonPath, JSON.stringify(angularJson, null, 2));
+            
             // Try using npm script if it exists
             const packageJsonPath = path.join(projectDir, 'package.json');
             if (fs.existsSync(packageJsonPath)) {
@@ -283,11 +291,6 @@ function startStorybookProcess(config) {
                 console.log(chalk.dim(`   Using npm script for Angular builder`));
                 break;
               }
-            }
-            // Fallback: Update the port in angular.json and use ng run
-            if (angularJson.projects[projectName].architect.storybook.options) {
-              angularJson.projects[projectName].architect.storybook.options.port = storybookPort;
-              fs.writeFileSync(angularJsonPath, JSON.stringify(angularJson, null, 2));
             }
             // Use npm run instead of direct ng command to avoid npx issues
             cmd = 'npm';
