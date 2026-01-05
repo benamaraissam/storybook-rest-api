@@ -1,6 +1,13 @@
 # storybook-rest-api
 
+[![npm version](https://img.shields.io/npm/v/storybook-rest-api.svg)](https://www.npmjs.com/package/storybook-rest-api)
+[![npm downloads](https://img.shields.io/npm/dm/storybook-rest-api.svg)](https://www.npmjs.com/package/storybook-rest-api)
+[![license](https://img.shields.io/npm/l/storybook-rest-api.svg)](https://github.com/benamaraissam/storybook-rest-api/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/github/stars/benamaraissam/storybook-rest-api?style=social)](https://github.com/benamaraissam/storybook-rest-api)
+
 Expose your Storybook stories via a REST API. Works with **Storybook 8, 9, and 10**.
+
+📦 **[View on npm](https://www.npmjs.com/package/storybook-rest-api)** | 🐙 **[View on GitHub](https://github.com/benamaraissam/storybook-rest-api)**
 
 ## Installation
 
