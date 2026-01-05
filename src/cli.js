@@ -12,7 +12,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { startServer } = require('./server');
-const { detectStorybookVersion, findStorybookConfig } = require('./utils');
+const { detectStorybookVersion, findStorybookConfig, detectFramework } = require('./utils');
 
 const program = new Command();
 
@@ -42,6 +42,12 @@ program
       console.log(chalk.yellow('⚠') + ' Could not detect Storybook version');
     }
 
+    // Detect framework
+    const framework = detectFramework(projectDir);
+    if (framework !== 'unknown') {
+      console.log(chalk.green('✓') + ` Detected framework: ${chalk.bold(framework)}`);
+    }
+
     // Find Storybook config
     const configDir = findStorybookConfig(projectDir);
     if (configDir) {
@@ -60,6 +66,7 @@ program
       configDir,
       proxy: options.proxy !== false,
       version,
+      framework,
     };
 
     try {

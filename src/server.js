@@ -256,14 +256,38 @@ function createApp(config) {
  * Start Storybook process
  */
 function startStorybookProcess(config) {
-  const { storybookPort, projectDir } = config;
+  const { storybookPort, projectDir, version, framework } = config;
 
   console.log(chalk.blue('→') + ` Starting Storybook on port ${storybookPort}...`);
 
-  // Use standard Storybook CLI (works for all frameworks including Angular)
-  // This is the recommended approach for Storybook 8+
-  const cmd = 'npx';
-  const args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
+  let cmd = 'npx';
+  let args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
+
+  // For Angular projects with Storybook 8+, we need to use Angular builder
+  if (framework === 'angular' && version >= 8) {
+    const angularJsonPath = path.join(projectDir, 'angular.json');
+    if (fs.existsSync(angularJsonPath)) {
+      try {
+        const angularJson = JSON.parse(fs.readFileSync(angularJsonPath, 'utf8'));
+        // Find the project with storybook target
+        for (const [projectName, project] of Object.entries(angularJson.projects || {})) {
+          if (project.architect?.storybook) {
+            cmd = 'npx';
+            args = ['ng', 'run', `${projectName}:storybook`, '--port', storybookPort.toString()];
+            console.log(chalk.dim(`   Using Angular builder for project: ${projectName}`));
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(chalk.yellow('⚠️  Could not read angular.json, falling back to standard Storybook CLI'));
+      }
+    } else {
+      // No angular.json, but it's Angular - might be a minimal setup
+      // Try using storybook dev with STORYBOOK_ANGULAR_LEGACY env var
+      console.log(chalk.yellow('⚠️  No angular.json found. Angular projects with Storybook 8+ typically require angular.json configuration.'));
+      console.log(chalk.dim('   Attempting to start with standard CLI...'));
+    }
+  }
 
   const storybook = spawn(cmd, args, {
     cwd: projectDir,
