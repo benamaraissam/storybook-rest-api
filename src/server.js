@@ -258,7 +258,7 @@ function createApp(config) {
 function startStorybookProcess(config) {
   const { storybookPort, projectDir, version, framework } = config;
 
-  console.log(chalk.blue('→') + ` Starting Storybook on port ${storybookPort}...`);
+  console.log(chalk.blue('→') + ` Starting Storybook (internal)...`);
 
   let cmd = 'npx';
   let args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
