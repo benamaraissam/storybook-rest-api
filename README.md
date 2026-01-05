@@ -189,9 +189,24 @@ startServer({
 
 ## Supported Storybook Versions
 
-- ✅ Storybook 8.x
-- ✅ Storybook 9.x
-- ✅ Storybook 10.x
+- ✅ Storybook 8.x (tested with Angular 17)
+- ✅ Storybook 9.x (tested with Angular 18)
+- ✅ Storybook 10.x (tested with Angular 21)
+
+## Examples
+
+Check out the [examples](https://github.com/benamaraissam/storybook-rest-api/tree/main/examples) folder for working projects:
+
+- `test-sb8` - Angular 17 + Storybook 8
+- `test-sb9` - Angular 18 + Storybook 9
+- `test-sb10` - Angular 21 + Storybook 10
+
+To run an example:
+```bash
+cd examples/test-sb8
+npm install
+npx storybook-rest-api
+```
 
 ## License
 
