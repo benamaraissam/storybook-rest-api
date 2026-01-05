@@ -9,7 +9,10 @@
   },
   "scripts": {
     "start": "node src/cli.js",
-    "test": "echo \"No tests yet\""
+    "test": "node test/run-tests.js",
+    "test:sb8": "node test/run-tests.js --only test-sb8",
+    "test:sb9": "node test/run-tests.js --only test-sb9",
+    "test:sb10": "node test/run-tests.js --only test-sb10"
   },
   "keywords": [
     "storybook",
