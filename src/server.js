@@ -260,32 +260,20 @@ function startStorybookProcess(config) {
 
   console.log(chalk.blue('→') + ` Starting Storybook on port ${storybookPort}...`);
 
-  // Detect package manager
-  let cmd = 'npx';
-  let args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
-
-  // Check for different Storybook configurations
-  const packageJsonPath = path.join(projectDir, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    
-    // Check if there's a custom storybook script
-    if (packageJson.scripts?.storybook) {
-      const script = packageJson.scripts.storybook;
-      
-      // Angular uses ng run
-      if (script.includes('ng run')) {
-        const projectName = script.match(/ng run ([^:]+):storybook/)?.[1] || 'project';
-        cmd = 'npx';
-        args = ['ng', 'run', `${projectName}:storybook`, '--port', storybookPort.toString()];
-      }
-    }
-  }
+  // Use standard Storybook CLI (works for all frameworks including Angular)
+  // This is the recommended approach for Storybook 8+
+  const cmd = 'npx';
+  const args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
 
   const storybook = spawn(cmd, args, {
     cwd: projectDir,
     shell: true,
     stdio: 'pipe',
+    env: {
+      ...process.env,
+      // Ensure Storybook uses the correct port
+      PORT: storybookPort.toString(),
+    },
   });
 
   storybook.stdout.on('data', (data) => {
@@ -299,8 +287,14 @@ function startStorybookProcess(config) {
   storybook.stderr.on('data', (data) => {
     const msg = data.toString();
     if (!msg.includes('ExperimentalWarning') && !msg.includes('deprecated') && !msg.includes('punycode')) {
-      if (msg.includes('error') || msg.includes('Error')) {
+      if (msg.includes('error') || msg.includes('Error') || msg.includes('not supported')) {
         console.error(chalk.red('[Storybook Error]'), msg.trim());
+        
+        // If it's the deprecated builder error, provide helpful message
+        if (msg.includes('not supported') || msg.includes('deprecated')) {
+          console.log(chalk.yellow('\n⚠️  If you see errors about deprecated builders, make sure you\'re using Storybook 8+'));
+          console.log(chalk.dim('   The standard "storybook dev" command should work for all frameworks.\n'));
+        }
       }
     }
   });
