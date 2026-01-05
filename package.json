@@ -1,11 +1,11 @@
 {
   "name": "storybook-rest-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Expose Storybook stories via REST API - works with Storybook 8, 9, and 10",
   "main": "src/index.js",
   "bin": {
-    "storybook-rest-api": "./src/cli.js",
-    "sb-rest-api": "./src/cli.js"
+    "storybook-rest-api": "src/cli.js",
+    "sb-rest-api": "src/cli.js"
   },
   "scripts": {
     "start": "node src/cli.js",
