@@ -1,0 +1,54 @@
+{
+  "name": "storybook-rest-api",
+  "version": "1.0.0",
+  "description": "Expose Storybook stories via REST API - works with Storybook 8, 9, and 10",
+  "main": "src/index.js",
+  "bin": {
+    "storybook-rest-api": "./src/cli.js",
+    "sb-rest-api": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "storybook",
+    "api",
+    "rest",
+    "stories",
+    "documentation",
+    "components",
+    "design-system",
+    "angular",
+    "react",
+    "vue"
+  ],
+  "author": "issambenamara",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/issambenamara/storybook-rest-api.git"
+  },
+  "homepage": "https://github.com/issambenamara/storybook-rest-api#readme",
+  "bugs": {
+    "url": "https://github.com/issambenamara/storybook-rest-api/issues"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^3.0.0",
+    "node-fetch": "^2.7.0",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "storybook": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "storybook": {
+      "optional": true
+    }
+  }
+}
