@@ -27,11 +27,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/issambenamara/storybook-rest-api.git"
+    "url": "git+https://github.com/benamaraissam/storybook-rest-api.git"
   },
-  "homepage": "https://github.com/issambenamara/storybook-rest-api#readme",
+  "homepage": "https://github.com/benamaraissam/storybook-rest-api#readme",
   "bugs": {
-    "url": "https://github.com/issambenamara/storybook-rest-api/issues"
+    "url": "https://github.com/benamaraissam/storybook-rest-api/issues"
   },
   "dependencies": {
     "express": "^4.18.2",
