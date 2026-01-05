@@ -263,7 +263,7 @@ function startStorybookProcess(config) {
   let cmd = 'npx';
   let args = ['storybook', 'dev', '-p', storybookPort.toString(), '--no-open'];
 
-  // For Angular projects with Storybook 8+, we need to use Angular builder
+  // For Angular projects with Storybook 8+, try Angular builder first, fallback to standard CLI
   if (framework === 'angular' && version >= 8) {
     const angularJsonPath = path.join(projectDir, 'angular.json');
     if (fs.existsSync(angularJsonPath)) {
@@ -272,9 +272,27 @@ function startStorybookProcess(config) {
         // Find the project with storybook target
         for (const [projectName, project] of Object.entries(angularJson.projects || {})) {
           if (project.architect?.storybook) {
-            cmd = 'npx';
-            args = ['ng', 'run', `${projectName}:storybook`, '--port', storybookPort.toString()];
-            console.log(chalk.dim(`   Using Angular builder for project: ${projectName}`));
+            // Try using npm script if it exists
+            const packageJsonPath = path.join(projectDir, 'package.json');
+            if (fs.existsSync(packageJsonPath)) {
+              const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+              if (packageJson.scripts?.storybook && packageJson.scripts.storybook.includes('ng run')) {
+                // Use npm script
+                cmd = 'npm';
+                args = ['run', 'storybook'];
+                console.log(chalk.dim(`   Using npm script for Angular builder`));
+                break;
+              }
+            }
+            // Fallback: Update the port in angular.json and use ng run
+            if (angularJson.projects[projectName].architect.storybook.options) {
+              angularJson.projects[projectName].architect.storybook.options.port = storybookPort;
+              fs.writeFileSync(angularJsonPath, JSON.stringify(angularJson, null, 2));
+            }
+            // Use npm run instead of direct ng command to avoid npx issues
+            cmd = 'npm';
+            args = ['run', 'storybook'];
+            console.log(chalk.dim(`   Using Angular builder via npm script`));
             break;
           }
         }
@@ -282,21 +300,19 @@ function startStorybookProcess(config) {
         console.log(chalk.yellow('⚠️  Could not read angular.json, falling back to standard Storybook CLI'));
       }
     } else {
-      // No angular.json, but it's Angular - might be a minimal setup
-      // Try using storybook dev with STORYBOOK_ANGULAR_LEGACY env var
-      console.log(chalk.yellow('⚠️  No angular.json found. Angular projects with Storybook 8+ typically require angular.json configuration.'));
-      console.log(chalk.dim('   Attempting to start with standard CLI...'));
+      console.log(chalk.yellow('⚠️  No angular.json found. Using standard Storybook CLI...'));
     }
   }
 
   const storybook = spawn(cmd, args, {
     cwd: projectDir,
-    shell: true,
+    shell: true, // Use shell: true for npm scripts
     stdio: 'pipe',
     env: {
       ...process.env,
       // Ensure Storybook uses the correct port
       PORT: storybookPort.toString(),
+      STORYBOOK_PORT: storybookPort.toString(),
     },
   });
 
@@ -311,13 +327,21 @@ function startStorybookProcess(config) {
   storybook.stderr.on('data', (data) => {
     const msg = data.toString();
     if (!msg.includes('ExperimentalWarning') && !msg.includes('deprecated') && !msg.includes('punycode')) {
-      if (msg.includes('error') || msg.includes('Error') || msg.includes('not supported')) {
+      if (msg.includes('error') || msg.includes('Error') || msg.includes('not supported') || msg.includes('unknown option')) {
         console.error(chalk.red('[Storybook Error]'), msg.trim());
         
         // If it's the deprecated builder error, provide helpful message
-        if (msg.includes('not supported') || msg.includes('deprecated')) {
-          console.log(chalk.yellow('\n⚠️  If you see errors about deprecated builders, make sure you\'re using Storybook 8+'));
-          console.log(chalk.dim('   The standard "storybook dev" command should work for all frameworks.\n'));
+        if (msg.includes('not supported') || msg.includes('deprecated') || msg.includes('AngularLegacyBuildOptionsError')) {
+          console.log(chalk.yellow('\n⚠️  Angular projects with Storybook 8+ require Angular builder configuration.'));
+          console.log(chalk.dim('   Make sure your angular.json has a storybook target configured.'));
+          console.log(chalk.dim('   You may need to run: npx storybook@latest automigrate\n'));
+        }
+        
+        // If there's an Angular CLI error
+        if (msg.includes('unknown option') && framework === 'angular') {
+          console.log(chalk.yellow('\n⚠️  Angular CLI error detected.'));
+          console.log(chalk.dim('   Try running Storybook manually first: npm run storybook'));
+          console.log(chalk.dim('   Or use: npx storybook dev -p 6010 (if your setup supports it)\n'));
         }
       }
     }
