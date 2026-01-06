@@ -1,9 +1,39 @@
 # storybook-rest-api
 
+> ⚠️ **DEPRECATED** - This package is deprecated. Please use **[storybook-mcp-api](https://www.npmjs.com/package/storybook-mcp-api)** instead, which integrates both REST API and MCP protocol in a single unified server.
+
 [![npm version](https://img.shields.io/npm/v/storybook-rest-api.svg)](https://www.npmjs.com/package/storybook-rest-api)
 [![npm downloads](https://img.shields.io/npm/dm/storybook-rest-api.svg)](https://www.npmjs.com/package/storybook-rest-api)
 [![license](https://img.shields.io/npm/l/storybook-rest-api.svg)](https://github.com/benamaraissam/storybook-rest-api/blob/main/LICENSE)
 [![GitHub](https://img.shields.io/github/stars/benamaraissam/storybook-rest-api?style=social)](https://github.com/benamaraissam/storybook-rest-api)
+
+## Migration
+
+**Switch to the new unified package:**
+
+```bash
+npm uninstall storybook-rest-api
+npm install storybook-mcp-api
+```
+
+Then update your usage:
+```bash
+# Old
+npx storybook-rest-api
+
+# New
+npx storybook-mcp-api
+```
+
+The new package provides:
+- ✅ All REST API endpoints (same as this package)
+- ✅ MCP protocol support for AI assistants
+- ✅ Single unified server on one port
+- ✅ Better performance and maintenance
+
+📦 **[Get storybook-mcp-api](https://www.npmjs.com/package/storybook-mcp-api)** | 🐙 **[GitHub](https://github.com/benamaraissam/storybook-mcp-api)**
+
+---
 
 Expose your Storybook stories via a REST API. Works with **Storybook 8, 9, and 10**.
 
