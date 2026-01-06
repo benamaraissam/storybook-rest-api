@@ -15,7 +15,7 @@ const onlyExample = onlyIndex !== -1 ? args[onlyIndex + 1] : null;
 let examples = [
   { name: 'test-sb8', expectedVersion: 8, port: 6006 },
   { name: 'test-sb9', expectedVersion: 9, port: 6009 },
-  { name: 'test-sb10', expectedVersion: 10, port: 6010 },
+  { name: 'test-sb10', expectedVersion: 10, port: 6008 },
 ];
 
 if (onlyExample) {

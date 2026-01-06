@@ -319,33 +319,31 @@ function startStorybookProcess(config) {
     },
   });
 
+  // Show all Storybook logs
   storybook.stdout.on('data', (data) => {
     const msg = data.toString();
-    // Only log important messages
-    if (msg.includes('Storybook') || msg.includes('started') || msg.includes('Local') || msg.includes('error') || msg.includes('Error')) {
-      console.log(chalk.dim('[Storybook]'), msg.trim());
-    }
+    // Show all Storybook output
+    process.stdout.write(chalk.dim('[Storybook] ') + msg);
   });
 
   storybook.stderr.on('data', (data) => {
     const msg = data.toString();
-    if (!msg.includes('ExperimentalWarning') && !msg.includes('deprecated') && !msg.includes('punycode')) {
-      if (msg.includes('error') || msg.includes('Error') || msg.includes('not supported') || msg.includes('unknown option')) {
-        console.error(chalk.red('[Storybook Error]'), msg.trim());
-        
-        // If it's the deprecated builder error, provide helpful message
-        if (msg.includes('not supported') || msg.includes('deprecated') || msg.includes('AngularLegacyBuildOptionsError')) {
-          console.log(chalk.yellow('\n⚠️  Angular projects with Storybook 8+ require Angular builder configuration.'));
-          console.log(chalk.dim('   Make sure your angular.json has a storybook target configured.'));
-          console.log(chalk.dim('   You may need to run: npx storybook@latest automigrate\n'));
-        }
-        
-        // If there's an Angular CLI error
-        if (msg.includes('unknown option') && framework === 'angular') {
-          console.log(chalk.yellow('\n⚠️  Angular CLI error detected.'));
-          console.log(chalk.dim('   Try running Storybook manually first: npm run storybook'));
-          console.log(chalk.dim('   Or use: npx storybook dev -p 6010 (if your setup supports it)\n'));
-        }
+    // Filter out noisy warnings but show everything else
+    if (!msg.includes('ExperimentalWarning') && !msg.includes('punycode')) {
+      // Show all stderr output (errors, warnings, etc.)
+      process.stderr.write(chalk.dim('[Storybook] ') + msg);
+      
+      // Provide helpful messages for specific errors
+      if (msg.includes('not supported') || msg.includes('deprecated') || msg.includes('AngularLegacyBuildOptionsError')) {
+        console.log(chalk.yellow('\n⚠️  Angular projects with Storybook 8+ require Angular builder configuration.'));
+        console.log(chalk.dim('   Make sure your angular.json has a storybook target configured.'));
+        console.log(chalk.dim('   You may need to run: npx storybook@latest automigrate\n'));
+      }
+      
+      if (msg.includes('unknown option') && framework === 'angular') {
+        console.log(chalk.yellow('\n⚠️  Angular CLI error detected.'));
+        console.log(chalk.dim('   Try running Storybook manually first: npm run storybook'));
+        console.log(chalk.dim('   Or use: npx storybook dev -p 6010 (if your setup supports it)\n'));
       }
     }
   });
@@ -397,18 +395,77 @@ async function startServer(config) {
 
   // Start the server
   return new Promise((resolve) => {
-    const server = app.listen(port, () => {
+    const server = app.listen(port, async () => {
       console.log('');
-      console.log(chalk.green('═══════════════════════════════════════════════════════════'));
-      console.log(chalk.green('  ✓ Server started successfully!'));
-      console.log(chalk.green('═══════════════════════════════════════════════════════════'));
+      console.log(chalk.blue('═══════════════════════════════════════════════════════════'));
+      console.log(chalk.blue('  ⏳ API server started, waiting for Storybook...'));
+      console.log(chalk.blue('═══════════════════════════════════════════════════════════'));
       console.log('');
-      console.log(`  ${chalk.bold('URL:')}          ${chalk.cyan(`http://localhost:${port}`)}`);
-      console.log(`  ${chalk.bold('API:')}          ${chalk.cyan(`http://localhost:${port}/api`)}`);
-      console.log(`  ${chalk.bold('Stories:')}      ${chalk.cyan(`http://localhost:${port}/api/stories`)}`);
-      console.log('');
-      console.log(chalk.dim('  Press Ctrl+C to stop'));
-      console.log('');
+
+      // Wait for Storybook to be ready
+      if (proxy && storybookProcess) {
+        let storybookReady = false;
+        const maxWaitTime = 120000; // 2 minutes
+        const startTime = Date.now();
+        const checkInterval = 2000; // Check every 2 seconds
+
+        while (!storybookReady && (Date.now() - startTime) < maxWaitTime) {
+          try {
+            const response = await fetch(`${storybookUrl}/index.json`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.entries && Object.keys(data.entries).length > 0) {
+                storybookReady = true;
+                break;
+              }
+            }
+          } catch (error) {
+            // Storybook not ready yet, continue waiting
+          }
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+
+        if (storybookReady) {
+          console.log('');
+          console.log(chalk.green('═══════════════════════════════════════════════════════════'));
+          console.log(chalk.green('  ✓ Storybook is ready!'));
+          console.log(chalk.green('═══════════════════════════════════════════════════════════'));
+          console.log('');
+          console.log(`  ${chalk.bold('URL:')}          ${chalk.cyan(`http://localhost:${port}`)}`);
+          console.log(`  ${chalk.bold('API:')}          ${chalk.cyan(`http://localhost:${port}/api`)}`);
+          console.log(`  ${chalk.bold('Stories:')}      ${chalk.cyan(`http://localhost:${port}/api/stories`)}`);
+          console.log('');
+          console.log(chalk.dim('  Press Ctrl+C to stop'));
+          console.log('');
+        } else {
+          console.log('');
+          console.log(chalk.yellow('═══════════════════════════════════════════════════════════'));
+          console.log(chalk.yellow('  ⚠️  Storybook is taking longer than expected to start'));
+          console.log(chalk.yellow('═══════════════════════════════════════════════════════════'));
+          console.log('');
+          console.log(`  ${chalk.bold('URL:')}          ${chalk.cyan(`http://localhost:${port}`)}`);
+          console.log(`  ${chalk.bold('API:')}          ${chalk.cyan(`http://localhost:${port}/api`)}`);
+          console.log(`  ${chalk.bold('Stories:')}      ${chalk.cyan(`http://localhost:${port}/api/stories`)}`);
+          console.log('');
+          console.log(chalk.dim('  The API server is running, but Storybook may still be starting.'));
+          console.log(chalk.dim('  Check the Storybook logs above for any errors.'));
+          console.log(chalk.dim('  Press Ctrl+C to stop'));
+          console.log('');
+        }
+      } else {
+        // No proxy mode - just show server info
+        console.log('');
+        console.log(chalk.green('═══════════════════════════════════════════════════════════'));
+        console.log(chalk.green('  ✓ Server started successfully!'));
+        console.log(chalk.green('═══════════════════════════════════════════════════════════'));
+        console.log('');
+        console.log(`  ${chalk.bold('URL:')}          ${chalk.cyan(`http://localhost:${port}`)}`);
+        console.log(`  ${chalk.bold('API:')}          ${chalk.cyan(`http://localhost:${port}/api`)}`);
+        console.log(`  ${chalk.bold('Stories:')}      ${chalk.cyan(`http://localhost:${port}/api/stories`)}`);
+        console.log('');
+        console.log(chalk.dim('  Press Ctrl+C to stop'));
+        console.log('');
+      }
 
       resolve(server);
     });
